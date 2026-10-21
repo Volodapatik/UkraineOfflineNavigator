@@ -4,7 +4,6 @@ import android.Manifest
 import android.location.Location
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,13 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.LocationComponentActivationOptions
@@ -38,7 +35,6 @@ import ua.volodapatik.navigator.utils.GeoUtils
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     // Permissions
     val permissionsState = rememberMultiplePermissionsState(
@@ -119,12 +115,19 @@ fun MapScreen() {
                     MapView(ctx).apply {
                         onCreate(null)
                         getMapAsync { map ->
-                            // Free style (MapLibre demo / OpenFreeMap or similar)
-                            // For MVP we use a public style. Later replace with offline tiles.
+                            // Нормальна детальна карта (OpenFreeMap - безкоштовно, з вулицями)
+                            // Liberty стиль добре виглядає і показує дороги/назви
                             map.setStyle(
                                 Style.Builder()
-                                    .fromUri("https://demotiles.maplibre.org/style.json")
+                                    .fromUri("https://tiles.openfreemap.org/styles/liberty")
                             ) { style ->
+                                // Центруємо на Україні при старті
+                                val ukraineCenter = LatLng(48.3794, 31.1656) // центр України
+                                map.cameraPosition = CameraPosition.Builder()
+                                    .target(ukraineCenter)
+                                    .zoom(6.0)
+                                    .build()
+
                                 // Enable location component
                                 val locationComponent = map.locationComponent
                                 locationComponent.activateLocationComponent(
