@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,44 +25,29 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant execute permission for gradlew
-        run: |
-          if [ -f ./gradlew ]; then
-            chmod +x ./gradlew
-          else
-            echo "No gradlew found, will generate later"
-          fi
-
       - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: Setup Gradle Wrapper
         run: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          gradle wrapper --gradle-version 8.9
+          chmod +x ./gradlew
 
       - name: Build Debug APK
-        run: |
-          # Try to build. If no wrapper - use gradle directly after generating wrapper
-          if [ ! -f ./gradlew ]; then
-            gradle wrapper --gradle-version 8.9
-            chmod +x ./gradlew
-          fi
-          ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info
 
-      - name: Find APK
-        id: find_apk
-        run: |
-          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "Found APK: $APK_PATH"
-          ls -la app/build/outputs/apk/ || true
+      - name: List APK files
+        run: find app/build/outputs -name "*.apk" -type f
 
-      - name: Upload APK as artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UkraineNavigator-debug
-          path: app/build/outputs/apk/**/*.apk
+          name: UkraineNavigator-v0.1.0-mvp
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
 
-      - name: Create Release and upload APK
+      - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
         with:
           tag_name: v0.1.0-mvp
           name: Ukraine Navigator MVP v0.1.0
@@ -68,18 +56,20 @@ jobs:
 
             ### Що працює:
             - MapLibre карта
-            - GPS позиція + стрілка
-            - 3 режими: Авто / Пішки / Велик
-            - Тестова навігація (відстань + час)
+            - GPS позиція + стрілка напрямку
+            - 3 режими транспорту: Авто / Пішки / Велик
+            - Тестова навігація (відстань + час, що залишився)
 
             ### Як користуватись:
-            1. Дай дозвіл на геолокацію
-            2. Довге натискання на карті = точка призначення
-            3. Внизу з’явиться відстань і час
+            1. Встанови APK
+            2. Дай дозвіл на геолокацію
+            3. **Довге натискання** на карті = точка призначення
+            4. Внизу з’явиться панель з відстанню і часом
 
-            **Примітка:** Це debug-збірка. Повна офлайн-маршрутизація ще в розробці.
-          files: app/build/outputs/apk/**/*.apk
+            > Це debug-збірка. Повна офлайн-маршрутизація і карти України ще в розробці.
+          files: app/build/outputs/apk/debug/*.apk
           draft: false
           prerelease: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

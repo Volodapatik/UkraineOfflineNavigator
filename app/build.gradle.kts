@@ -29,6 +29,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -59,8 +62,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
-    // MapLibre
-    implementation("org.maplibre.gl:android-sdk:11.5.1")
+    // MapLibre (latest stable)
+    implementation("org.maplibre.gl:android-sdk:13.6.1")
 
     // Location
     implementation("com.google.android.gms:play-services-location:21.3.0")
