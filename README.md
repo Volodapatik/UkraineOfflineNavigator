@@ -1,2 +1,42 @@
-# UkraineOfflineNavigator
-Offline GPS navigator for Ukraine (Car / Walk / Bike) with MapLibre, voice guidance and offline search. MVP version.
+# Ukraine Offline Navigator (MVP)
+
+Офлайн GPS-навігатор для України.
+
+## Поточний статус (MVP v0.1)
+
+- [x] Kotlin + Jetpack Compose
+- [x] MapLibre карта
+- [x] GPS позиція + стрілка напрямку
+- [x] 3 режими транспорту: Авто / Пішки / Велик
+- [x] Тестова навігація: відстань + час, що залишився
+- [ ] Повноцінна маршрутизація (GraphHopper)
+- [ ] Офлайн карти України
+- [ ] Офлайн пошук адрес
+- [ ] Голосові підказки
+
+## Як користуватись зараз
+
+1. Дай дозвіл на геолокацію
+2. Карта покаже твою позицію
+3. **Довге натискання** на карті — ставиш точку призначення
+4. Внизу з’являється панель з:
+   - Залишковою відстанню (м / км)
+   - Залишковим часом (сек / хв / год)
+5. Можна перемикати режим транспорту — час перераховується
+
+## Технології
+
+- MapLibre Native Android
+- Google Play Services Location
+- Jetpack Compose + Material 3
+- Kotlin Coroutines + Flow
+
+## Наступні кроки
+
+1. Підключити офлайн vector tiles для України
+2. Додати GraphHopper offline routing
+3. Голосові підказки (TTS)
+4. Офлайн пошук
+
+---
+Репозиторій: https://github.com/Volodapatik/UkraineOfflineNavigator
