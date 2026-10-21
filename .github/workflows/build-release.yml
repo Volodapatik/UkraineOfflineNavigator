@@ -1,0 +1,85 @@
+name: Build APK & Create Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: |
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+          else
+            echo "No gradlew found, will generate later"
+          fi
+
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: Build Debug APK
+        run: |
+          # Try to build. If no wrapper - use gradle directly after generating wrapper
+          if [ ! -f ./gradlew ]; then
+            gradle wrapper --gradle-version 8.9
+            chmod +x ./gradlew
+          fi
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Find APK
+        id: find_apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK_PATH"
+          ls -la app/build/outputs/apk/ || true
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UkraineNavigator-debug
+          path: app/build/outputs/apk/**/*.apk
+
+      - name: Create Release and upload APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v0.1.0-mvp
+          name: Ukraine Navigator MVP v0.1.0
+          body: |
+            ## Ukraine Offline Navigator — MVP v0.1.0
+
+            ### Що працює:
+            - MapLibre карта
+            - GPS позиція + стрілка
+            - 3 режими: Авто / Пішки / Велик
+            - Тестова навігація (відстань + час)
+
+            ### Як користуватись:
+            1. Дай дозвіл на геолокацію
+            2. Довге натискання на карті = точка призначення
+            3. Внизу з’явиться відстань і час
+
+            **Примітка:** Це debug-збірка. Повна офлайн-маршрутизація ще в розробці.
+          files: app/build/outputs/apk/**/*.apk
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
