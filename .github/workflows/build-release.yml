@@ -24,29 +24,32 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: Create local.properties
-        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Setup Gradle Wrapper
+      - name: Generate Gradle Wrapper
         run: |
           gradle wrapper --gradle-version 8.9
           chmod +x ./gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace --info
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: List APK files
-        run: find app/build/outputs -name "*.apk" -type f
+      - name: List output files
+        run: find app/build/outputs -type f -name "*.apk" || echo "No APK found"
 
-      - name: Upload APK artifact
+      - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: UkraineNavigator-v0.1.0-mvp
-          path: app/build/outputs/apk/debug/*.apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
 
-      - name: Create GitHub Release with APK
+      - name: Create GitHub Release + attach APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.1.0-mvp
@@ -58,7 +61,7 @@ jobs:
             - MapLibre карта
             - GPS позиція + стрілка напрямку
             - 3 режими транспорту: Авто / Пішки / Велик
-            - Тестова навігація (відстань + час, що залишився)
+            - Тестова навігація (відстань + час)
 
             ### Як користуватись:
             1. Встанови APK
@@ -66,10 +69,9 @@ jobs:
             3. **Довге натискання** на карті = точка призначення
             4. Внизу з’явиться панель з відстанню і часом
 
-            > Це debug-збірка. Повна офлайн-маршрутизація і карти України ще в розробці.
+            > Debug-збірка. Повна офлайн-маршрутизація ще в розробці.
           files: app/build/outputs/apk/debug/*.apk
           draft: false
           prerelease: true
-          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
